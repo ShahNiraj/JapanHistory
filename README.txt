@@ -126,9 +126,43 @@ For the analysis:
 For Stig:
 /home/niraj/LotusGenome/Niraj/2_LotusAccessions/runGATKv2.7-2/VCF_QualityControl/chr0/FinalGeno_137Lj_raw.snps.ref.filt1.g5mac0.5.nr.recode.vcf
 
+################## LD decay ###############
+## cmd used:
+qx --no-scratch -n=1 -c=1 '/com/extra/vcftools/0.1.9/bin/vcftools --vcf FinalGeno_137Lj_raw.snps.ref.filt1.g5mac0.5.nr.recode.vcf --geno-r2 --ld-window-bp 50000 --max-alleles 2 --min-alleles 2 --out FinalGeno_137Lj_raw.snps.ref.filt1.g5mac0.5.nr'
+
+## Extract 200000 random SNPs from the output using perl script
+qx --no-scratch -n=1 -c=1 'perl lddecay_generateRandomPosition.pl FinalGeno_137Lj_raw.snps.ref.filt1.g5mac0.5.nr.geno.ld > FinalGeno_137Lj_raw.snps.ref.filt1.g5mac0.5.nr.geno.ld.few.txt'
+
+## Plot the ld value using R
+run the r script 'lddecy_plotLDvalues.r' in the Rstudio
+
+################## Genetic and Geographic distance corelation  #####################
+## Scripts to find genetic distance from vcf file
+perl transpose.pl Lj.vcf > Lj.transpose.vcf
+perl briefInfovcf.pl Lj.transpose.vcf > Lj.reduced.vcf
+perl GeneticDistanceCalculator.pl Lj.reduced.vcf > Lj.geneDist.txt
+
+## Command to calculate Geographic distance
+## Need R package 'geosphere'
+capture.output(distVincentyEllipsoid(c(137.2666667,35.71666667),c(139.2669444,35.30222222)),file="out.txt",append=TRUE)
+
+## Script to merge genetic and geographic distance files
+perl MergeGen-GeoFiles.pl 
+
+## Plot the values using R
+setwd("/Users/nshah/Desktop/Niraj/PopGenetics/CorelationGeneticGeographicDistance/InclTshushimaAccessions")
+st_within <- read.table(file = "st_intra.txt",header = TRUE)
+plot(st_within$GeoDist,st_within$GeneDist,type = "p",pch=16,cex=0.5,col="blue",xlim = c(0,2700),ylim = c(0,0.5))
+abline(lm(st_within$GeneDist~st_within$GeoDist),col="blue",lwd=1.5)
+#lm(st_within$GenDist~st_within$dist)
+
+st_between <- read.table(file = "st_inter.txt",header = TRUE)
+points(st_between$GeoDist,st_between$GeneDist,type = "p",pch=16,cex=0.5,col="red",xlim = c(0,2700),ylim = c(0,0.5))
+abline(lm(st_between$GeneDist~st_between$GeoDist),col="red",lwd=1.5)
+  
 ## SNPs annotation
 
 
 ## PCA and Structure
 
-## …
+##
